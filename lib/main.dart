@@ -1,4 +1,5 @@
 import 'package:dripnotes/view/login_view.dart';
+import 'package:dripnotes/view/register_view.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
@@ -14,6 +15,10 @@ void main() {
         primarySwatch: Colors.blue,
       ),
       home: const HomePage(),
+      routes: {
+        '/login/': (Context) => const LoginView(),
+        '/register/': (Context) => const RegisterView(),
+      },
     ),
   );
 }
@@ -23,38 +28,25 @@ class HomePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text(
-          "HomePage",
-          style: TextStyle(
-            color: Colors.white,
-            fontFamily: 'Roboto',
-          ),
-        ),
-        backgroundColor: Colors.blue,
+    return FutureBuilder(
+      future: Firebase.initializeApp(
+        options: DefaultFirebaseOptions.currentPlatform,
       ),
-      body: FutureBuilder(
-        future: Firebase.initializeApp(
-          options: DefaultFirebaseOptions.currentPlatform,
-        ),
-        builder: (context, snapshot) {
-          switch (snapshot.connectionState) {
-            case ConnectionState.done:
-              final user = FirebaseAuth.instance.currentUser;
-              if(user?.emailVerified ?? false){
-                print("User E-mail is verified");
-              } else{
-                return const Text("User ain't verified");
-              }
-              return const Text("Done");
-            default:
-              return const Text("Loading...");
-          }
-        },
-      ),
+      builder: (context, snapshot) {
+        switch (snapshot.connectionState) {
+          case ConnectionState.done:
+            // final user = FirebaseAuth.instance.currentUser;
+            // if (user?.emailVerified ?? false) {
+            // } else {
+            //   print("User ain't verified");
+            //   return verifyEmailView();
+            // }
+            return const LoginView();
+          default:
+            return const Text("Loading...");
+        }
+      },
     );
   }
 }
-
 

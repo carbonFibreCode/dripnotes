@@ -1,7 +1,5 @@
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
-import '../firebase_options.dart';
 
 class LoginView extends StatefulWidget {
   const LoginView({super.key});
@@ -31,76 +29,71 @@ class _LoginViewState extends State<LoginView> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          "Login to your Account",
-          style: TextStyle(
-            color: Colors.white,
-            fontFamily: 'Roboto',
-          ),
+        title: const Text("Login",
+        style: TextStyle(
+          color: Colors.white
+        ),
         ),
         backgroundColor: Colors.blue,
       ),
-      body: FutureBuilder(
-        future: Firebase.initializeApp(
-          options: DefaultFirebaseOptions.currentPlatform,
-        ),
-        builder: (context, snapshot) {
-          switch (snapshot.connectionState) {
-            case ConnectionState.done:
-              return Column(
-                children: [
-                  TextField(
-                    controller: _email,
-                    autocorrect: false,
-                    enableSuggestions: false,
-                    keyboardType: TextInputType.emailAddress,
-                    decoration: const InputDecoration(
-                      hintText: "Enter Email or Username",
-                    ),
-                  ),
-                  TextField(
-                    controller: _password,
-                    obscureText: true,
-                    autocorrect: false,
-                    enableSuggestions: false,
-                    decoration: const InputDecoration(
-                      hintText: "Enter Password",
-                    ),
-                  ),
-                  TextButton(
+      body: Column(
+        children: [
+          TextField(
+            controller: _email,
+            autocorrect: false,
+            enableSuggestions: false,
+            keyboardType: TextInputType.emailAddress,
+            decoration: const InputDecoration(
+              hintText: "Enter Email or Username",
+            ),
+          ),
+          TextField(
+            controller: _password,
+            obscureText: true,
+            autocorrect: false,
+            enableSuggestions: false,
+            decoration: const InputDecoration(
+              hintText: "Enter Password",
+            ),
+          ),
+          TextButton(
 
-                    onPressed: () async {
-                      final email = _email.text;
-                      final password = _password.text;
-                      try{
-                        final UserCredential userCredential = await FirebaseAuth.instance.signInWithEmailAndPassword(
-                        email: email, password: password);
-                        print(userCredential);
-                        } on FirebaseAuthException catch(e){
-                        if (e.code == "invalid-credential"){
-                          print("User email or password is invalid");
-                        }
-                        else if (e.code == "channel-error") {
-                          print ("Please enter the credentials shawty");
-                        }
-                      }
-                        catch(e){
-                        print("something bad has happened");
-                      }
-                    },
-                    child: const Text(
-                      "Login",
-                      style: TextStyle(
-                        color: Colors.blue,
-                      ),
-                    ),
-                  ),
-                ],
-              );
-            default:
-              return const Text("Loading...");
-          }
-        },
+            onPressed: () async {
+              final email = _email.text;
+              final password = _password.text;
+              try{
+                final UserCredential userCredential = await FirebaseAuth.instance.signInWithEmailAndPassword(
+                    email: email, password: password);
+                print(userCredential);
+              } on FirebaseAuthException catch(e){
+                if (e.code == "invalid-credential"){
+                  print("User email or password is invalid");
+                }
+                else if (e.code == "channel-error") {
+                  print ("Please enter the credentials shawty");
+                }
+              }
+              catch(e){
+                print("something bad has happened");
+              }
+            },
+            child: const Text(
+              "Login",
+              style: TextStyle(
+                color: Colors.blue,
+              ),
+            ),
+          ),
+          TextButton(onPressed: () {
+            Navigator.of(context).pushNamedAndRemoveUntil('/register/',
+                (route) => false
+            );
+          }, child: const Text("Not yet registered? Register Now!",
+            style: TextStyle(
+              color: Colors.blue,
+            ),)
+          )
+        ],
       ),
     );
   }
