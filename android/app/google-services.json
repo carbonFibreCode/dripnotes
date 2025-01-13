@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "498964911275",
+    "project_id": "dripnotes-new-2025",
+    "storage_bucket": "dripnotes-new-2025.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:498964911275:android:a12fc07556b6e2a6bbd3ee",
+        "android_client_info": {
+          "package_name": "shop.drippingmonks.dripnotes"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB3bwu7OCq9SKkLl6AwksYd31eUWQmbhO4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
