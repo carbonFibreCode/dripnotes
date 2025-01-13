@@ -1,2 +1,1 @@
-# dripnotes
-dripnotes flutter application
+
