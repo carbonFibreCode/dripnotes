@@ -1,6 +1,9 @@
+import 'package:dripnotes/constants/routes.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'dart:developer' as devtools show log;
+
+import '../utilities/showErrorDialog.dart';
 
 class LoginView extends StatefulWidget {
   const LoginView({super.key});
@@ -26,14 +29,14 @@ class _LoginViewState extends State<LoginView> {
     _password.dispose();
     super.dispose();
   }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Login",
-        style: TextStyle(
-          color: Colors.white
-        ),
+        title: const Text(
+          "Login",
+          style: TextStyle(color: Colors.white),
         ),
         backgroundColor: Colors.blue,
       ),
@@ -58,24 +61,39 @@ class _LoginViewState extends State<LoginView> {
             ),
           ),
           TextButton(
-
             onPressed: () async {
               final email = _email.text;
               final password = _password.text;
-              try{
-                final UserCredential userCredential = await FirebaseAuth.instance.signInWithEmailAndPassword(
+              try {
+                await FirebaseAuth.instance.signInWithEmailAndPassword(
                     email: email, password: password);
-                Navigator.of(context).pushNamedAndRemoveUntil('/notes/', (route) => false);
-              } on FirebaseAuthException catch(e){
-                if (e.code == "invalid-credential"){
-                  devtools.log("User email or password is invalid");
+                final user = FirebaseAuth.instance.currentUser;
+                if(user != null){
+                  if(user.emailVerified){
+                    Navigator.of(context).pushNamedAndRemoveUntil(notesRoute, (route) => false);
+                  }
+                  else{
+                    Navigator.of(context).pushNamed(verifyEmailRoute);
+                  }
+                }
+                else{
+                  Navigator.of(context).pushNamedAndRemoveUntil(loginRoute, (route) => false);
+                }
+              } on FirebaseAuthException catch (e) {
+                if (e.code == "invalid-credential") {
+                  await showErrorDialog(context, "User email or password is invalid");
+                }
+                else if (e.code == "invalid-email"){
+                  await showErrorDialog(context, "Enter the valid E-mail ID");
                 }
                 else if (e.code == "channel-error") {
-                  print ("Please enter the credentials shawty");
+                  await showErrorDialog(context, "Enter the valid credentials");
                 }
-              }
-              catch(e){
-                devtools.log("something bad has happened");
+                else{
+                  await showErrorDialog(context, "error : ${e.code}");
+                }
+              } catch (e) {
+                await showErrorDialog(context, "error : $e");
               }
             },
             child: const Text(
@@ -85,17 +103,20 @@ class _LoginViewState extends State<LoginView> {
               ),
             ),
           ),
-          TextButton(onPressed: () {
-            Navigator.of(context).pushNamedAndRemoveUntil('/register/',
-                (route) => false
-            );
-          }, child: const Text("Not yet registered? Register Now!",
-            style: TextStyle(
-              color: Colors.blue,
-            ),)
-          )
+          TextButton(
+              onPressed: () {
+                Navigator.of(context)
+                    .pushNamedAndRemoveUntil('/register/', (route) => false);
+              },
+              child: const Text(
+                "Not yet registered? Register Now!",
+                style: TextStyle(
+                  color: Colors.blue,
+                ),
+              ))
         ],
       ),
     );
   }
 }
+

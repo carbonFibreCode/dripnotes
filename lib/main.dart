@@ -4,7 +4,7 @@ import 'package:dripnotes/view/verify_email_view.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
-import 'dart:developer' as devtools show log;
+import 'constants/routes.dart';
 import 'firebase_options.dart';
 
 void main() {
@@ -17,9 +17,10 @@ void main() {
       ),
       home: const HomePage(),
       routes: {
-        '/login/': (Context) => const LoginView(),
-        '/register/': (Context) => const RegisterView(),
-        '/notes/' : (context) => const NotesView(),
+        loginRoute: (context) => const LoginView(),
+        registerRoute: (context) => const RegisterView(),
+        notesRoute : (context) => const NotesView(),
+        verifyEmailRoute : (context) => const verifyEmailView(),
       },
     ),
   );
@@ -55,7 +56,7 @@ class HomePage extends StatelessWidget {
   }
 }
 
-enum MenuAction { LogOut }
+enum MenuAction { logOut }
 
 class NotesView extends StatefulWidget {
   const NotesView({super.key});
@@ -78,7 +79,7 @@ class _NotesViewState extends State<NotesView> {
             PopupMenuButton<MenuAction>(
               onSelected: (value) async {
                 switch (value) {
-                  case MenuAction.LogOut:
+                  case MenuAction.logOut:
                     final shouldLogout = await showLogoutDialog(context);
                     if(shouldLogout){
                       FirebaseAuth.instance.signOut();
@@ -91,7 +92,7 @@ class _NotesViewState extends State<NotesView> {
               itemBuilder: (context) {
                 return const [
                   PopupMenuItem<MenuAction>(
-                    value: MenuAction.LogOut,
+                    value: MenuAction.logOut,
                     child: Text("Log Out"),
                   )
                 ];

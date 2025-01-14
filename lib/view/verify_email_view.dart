@@ -1,3 +1,4 @@
+import 'package:dripnotes/constants/routes.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
@@ -21,13 +22,23 @@ class _verifyEmailViewState extends State<verifyEmailView> {
       ),
       body: Column(
         children: [
-          const Text("Verify your E-mail Address"),
+          const Text(
+              "We've sent a mail to verify your E-mail Address please open it to verify"),
+          const Text("If yet not recieved E-mail... click on the button below"),
           TextButton(
-              onPressed: () async {
-                final user = FirebaseAuth.instance.currentUser;
-                await user?.sendEmailVerification();
-              },
-              child: const Text("Send Verification Mail"))
+            onPressed: () async {
+              final user = FirebaseAuth.instance.currentUser;
+              await user?.sendEmailVerification();
+            },
+            child: const Text("Send Verification Mail"),
+          ),
+          TextButton(
+            onPressed: () async {
+              await FirebaseAuth.instance.signOut();
+              Navigator.of(context).pushNamedAndRemoveUntil(loginRoute, (route) => false,);
+            },
+            child: const Text("Restart"),
+          )
         ],
       ),
     );
