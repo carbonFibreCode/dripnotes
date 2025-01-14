@@ -83,9 +83,6 @@ class _LoginViewState extends State<LoginView> {
                 if (e.code == "invalid-credential") {
                   await showErrorDialog(context, "User email or password is invalid");
                 }
-                else if (e.code == "invalid-email"){
-                  await showErrorDialog(context, "Enter the valid E-mail ID");
-                }
                 else if (e.code == "channel-error") {
                   await showErrorDialog(context, "Enter the valid credentials");
                 }
