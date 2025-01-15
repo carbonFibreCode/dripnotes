@@ -3,6 +3,9 @@ import 'package:dripnotes/services/auth/auth_exceptions.dart';
 import 'package:dripnotes/services/auth/auth_provider.dart';
 import 'package:firebase_auth/firebase_auth.dart'
     show FirebaseAuth, FirebaseAuthException;
+import 'package:firebase_core/firebase_core.dart';
+
+import '../../firebase_options.dart';
 
 class FirebaseAuthProvider implements AuthProvider {
   @override
@@ -16,10 +19,10 @@ class FirebaseAuthProvider implements AuthProvider {
         password: password,
       );
       final user = currentUser;
-      if(user != null){
+      if (user != null) {
         return user;
       }
-      else{
+      else {
         throw UserNotLoggedInAuthException();
       }
     } on FirebaseAuthException catch (e) {
@@ -32,7 +35,7 @@ class FirebaseAuthProvider implements AuthProvider {
       } else {
         throw GenericAuthException();
       }
-    } catch(_){
+    } catch (_) {
       throw GenericAuthException();
     }
   }
@@ -48,7 +51,8 @@ class FirebaseAuthProvider implements AuthProvider {
   }
 
   @override
-  Future<AuthUser> logIn({required String email, required String password,}) async {
+  Future<AuthUser> logIn(
+      {required String email, required String password,}) async {
     try {
       await FirebaseAuth.instance.signInWithEmailAndPassword(
           email: email, password: password);
@@ -58,22 +62,23 @@ class FirebaseAuthProvider implements AuthProvider {
       } else {
         throw UserNotLoggedInAuthException();
       }
-    } on FirebaseAuthException catch(e){
+    } on FirebaseAuthException catch (e) {
       if (e.code == "invalid-credential") {
         throw InvalidCredentialsAuthException();
       }
       else if (e.code == "channel-error") {
         throw ChannelErrorAuthException();
       }
-      else{
+      else if (e.code == "invalid-email"){
+        throw InvalidEmailAuthException();
+      }
+      else {
         throw GenericAuthException();
       }
     } catch (e) {
       throw GenericAuthException();
     }
   }
-
-
 
 
   @override
@@ -88,14 +93,21 @@ class FirebaseAuthProvider implements AuthProvider {
   }
 
 
-    @override
-    Future<void> sendEmailVerification() async {
-      final user = FirebaseAuth.instance.currentUser;
-      if (user != null) {
-        user.sendEmailVerification();
-      }
-      else {
-        throw UserNotLoggedInAuthException();
-      }
+  @override
+  Future<void> sendEmailVerification() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      user.sendEmailVerification();
+    }
+    else {
+      throw UserNotLoggedInAuthException();
     }
   }
+
+  @override
+  Future<void> initialize() async {
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
+  }
+}

@@ -3,8 +3,6 @@ class InvalidCredentialsAuthException implements Exception{}
 
 class ChannelErrorAuthException implements Exception{}
 
-class UserNotFoundAuthException implements Exception{}
-
 //register exceptions
 class EmailAlreadyInUseAuthException implements Exception{}
 
