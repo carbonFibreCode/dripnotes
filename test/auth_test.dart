@@ -51,7 +51,7 @@ void main() {
         ),
       );
       test(
-        "Create User should deleagte to login Function",
+        "Create User should delegate to login Function",
         () async {
           final badEmailUser = provider.createUser(
             email: "foo@bar.com",
