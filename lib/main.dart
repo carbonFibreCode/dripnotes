@@ -1,6 +1,7 @@
 import 'package:dripnotes/services/auth/auth_service.dart';
 import 'package:dripnotes/view/login_view.dart';
-import 'package:dripnotes/view/notes_view.dart';
+import 'package:dripnotes/view/notes/new_note_view.dart';
+import 'package:dripnotes/view/notes/notes_view.dart';
 import 'package:dripnotes/view/register_view.dart';
 import 'package:dripnotes/view/verify_email_view.dart';
 import 'package:flutter/material.dart';
@@ -20,6 +21,7 @@ void main() {
         registerRoute: (context) => const RegisterView(),
         notesRoute : (context) => const NotesView(),
         verifyEmailRoute : (context) => const verifyEmailView(),
+        newNoteRoute : (context) => const NewNoteView(),
       },
     ),
   );

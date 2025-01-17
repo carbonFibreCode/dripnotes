@@ -2,7 +2,7 @@ import 'package:dripnotes/constants/routes.dart';
 import 'package:dripnotes/services/auth/auth_service.dart';
 import 'package:dripnotes/services/crud/notes_service.dart';
 import 'package:flutter/material.dart';
-import '../enums/menu_action.dart';
+import '../../enums/menu_action.dart';
 
 class NotesView extends StatefulWidget {
   const NotesView({super.key});
@@ -38,6 +38,14 @@ class _NotesViewState extends State<NotesView> {
         ),
         backgroundColor: Colors.blue,
         actions: [
+          IconButton(
+              onPressed: () {
+                Navigator.of(context).pushNamed(newNoteRoute);
+              },
+              icon: const Icon(
+                Icons.add,
+                color: Colors.white,
+              )),
           PopupMenuButton<MenuAction>(
             onSelected: (value) async {
               switch (value) {
@@ -71,15 +79,15 @@ class _NotesViewState extends State<NotesView> {
           switch (snapshot.connectionState) {
             case ConnectionState.done:
               return StreamBuilder(
-                  stream: _notesService.allNotes,
-                  builder: (context, snapshot) {
-                    switch (snapshot.connectionState){
-                      case ConnectionState.waiting:
-                        return const Text('Waiting for all notes...');
-                      default:
-                        return CircularProgressIndicator();
-                    }
-                  },
+                stream: _notesService.allNotes,
+                builder: (context, snapshot) {
+                  switch (snapshot.connectionState) {
+                    case ConnectionState.waiting:
+                      return const Text('Waiting for all notes...');
+                    default:
+                      return CircularProgressIndicator();
+                  }
+                },
               );
             default:
               return const CircularProgressIndicator();
