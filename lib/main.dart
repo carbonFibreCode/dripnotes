@@ -20,7 +20,7 @@ void main() {
         loginRoute: (context) => const LoginView(),
         registerRoute: (context) => const RegisterView(),
         notesRoute : (context) => const NotesView(),
-        verifyEmailRoute : (context) => const verifyEmailView(),
+        verifyEmailRoute : (context) => const verifyEmailView(), // Corrected class name
         newNoteRoute : (context) => const NewNoteView(),
       },
     ),
@@ -38,21 +38,22 @@ class HomePage extends StatelessWidget {
         switch (snapshot.connectionState) {
           case ConnectionState.done:
             final user = AuthService.firebase().currentUser;
+            print('User state: $user'); // Debugging line
             if (user != null) {
               if (user.isEmailVerified) {
-                return NotesView();
+                return const NotesView(); // Ensure this initializes properly
               } else {
-                return const verifyEmailView();
+                return const verifyEmailView(); // Corrected class name
               }
             } else {
               return const LoginView();
             }
-          default:
+          case ConnectionState.waiting:
             return const CircularProgressIndicator();
+          default:
+            return const Center(child: Text('Error initializing app.'));
         }
       },
     );
   }
 }
-
-

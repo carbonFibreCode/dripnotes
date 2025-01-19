@@ -6,43 +6,32 @@ class NewNoteView extends StatefulWidget {
   const NewNoteView({super.key});
 
   @override
-  State<NewNoteView> createState() => _NewNoteViewState();
+  State createState() => _NewNoteViewState();
 }
 
 class _NewNoteViewState extends State<NewNoteView> {
-  DatabaseNotes? _notes;
+  DatabaseNotes? _note; // Changed from _notes to _note
   late final NotesService _notesService;
   late final TextEditingController _textController;
 
   @override
   void initState() {
+    super.initState();
     _notesService = NotesService();
     _textController = TextEditingController();
-    super.initState();
-  }
-
-  void _textControllerListener() async {
-    final note = _notes;
-    if (note == null) {
-      return;
-    }
-    final text = _textController.text;
-    await _notesService.updateNote(
-      note: note,
-      text: text,
-    );
+    _setupTextControllerListener();
   }
 
   void _setupTextControllerListener() {
-    _textController.removeListener(_textControllerListener);
-    _textController.addListener(_textControllerListener);
+    _textController.addListener(() async {
+      if (_note != null) {
+        final text = _textController.text;
+        await _notesService.updateNote(note: _note!, text: text);
+      }
+    });
   }
 
-  Future<DatabaseNotes> createNewNote() async {
-    final existingNote = _notes;
-    if (existingNote != null) {
-      return existingNote;
-    }
+  Future<DatabaseNotes?> createNewNote() async {
     final currentUser = AuthService.firebase().currentUser;
     final email = currentUser!.email!;
     final owner = await _notesService.getUser(email: email);
@@ -50,27 +39,22 @@ class _NewNoteViewState extends State<NewNoteView> {
   }
 
   void _deleteNoteIfTextIsEmpty() {
-    final note = _notes;
-    if (_textController.text.isEmpty && note != null) {
-      _notesService.deleteNote(id: note.id);
+    if (_textController.text.isEmpty && _note != null) {
+      _notesService.deleteNote(id: _note!.id);
     }
   }
 
-  void _saveNoteIfTextNotempty() async {
-    final note = _notes;
+  void _saveNoteIfTextNotEmpty() async {
     final text = _textController.text;
-    if (note != null && text.isNotEmpty) {
-      await _notesService.updateNote(
-        note: note,
-        text: text,
-      );
+    if (_note != null && text.isNotEmpty) {
+      await _notesService.updateNote(note: _note!, text: text);
     }
   }
 
   @override
   void dispose() {
     _deleteNoteIfTextIsEmpty();
-    _saveNoteIfTextNotempty();
+    _saveNoteIfTextNotEmpty();
     _textController.dispose();
     super.dispose();
   }
@@ -78,30 +62,32 @@ class _NewNoteViewState extends State<NewNoteView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        appBar: AppBar(
-          title: const Text('New note'),
-        ),
-        body: FutureBuilder(
-          future: createNewNote(),
-          builder: (context, snapshot) {
-            switch (snapshot.connectionState) {
-              case ConnectionState.done:
-                if(snapshot.hasData) {
-                  _notes = snapshot.data as DatabaseNotes;
-                  _setupTextControllerListener();
-                }
+      appBar: AppBar(
+        title: const Text('New note'),
+      ),
+      body: FutureBuilder(
+        future: createNewNote(),
+        builder: (context, snapshot) {
+          switch (snapshot.connectionState) {
+            case ConnectionState.done:
+              if (snapshot.hasData) {
+                _note = snapshot.data as DatabaseNotes;
                 return TextField(
                   controller: _textController,
                   keyboardType: TextInputType.multiline,
                   maxLines: null,
                   decoration: const InputDecoration(
-                    hintText: 'start typing your note...'
-                  )
+                    hintText: 'Start typing your note...',
+                  ),
                 );
-              default:
-                return const CircularProgressIndicator();
-            }
-          },
-        ));
+              } else {
+                return const Text('Error creating note.');
+              }
+            default:
+              return const CircularProgressIndicator();
+          }
+        },
+      ),
+    );
   }
 }

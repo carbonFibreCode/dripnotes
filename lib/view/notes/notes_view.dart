@@ -10,38 +10,34 @@ class NotesView extends StatefulWidget {
   const NotesView({super.key});
 
   @override
-  State<NotesView> createState() => _NotesViewState();
+  State createState() => _NotesViewState();
 }
 
 class _NotesViewState extends State<NotesView> {
   late final NotesService _notesService;
+
   String get userEmail => AuthService.firebase().currentUser!.email!;
 
   @override
   void initState() {
-    _notesService = NotesService();
-    _notesService.open();
     super.initState();
+    _notesService = NotesService();
+    _notesService.open(); // Ensure database is opened
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          "Your Notes",
-          style: TextStyle(color: Colors.white),
-        ),
+        title: const Text("Your Notes", style: TextStyle(color: Colors.white)),
         backgroundColor: Colors.blue,
         actions: [
           IconButton(
-              onPressed: () {
-                Navigator.of(context).pushNamed(newNoteRoute);
-              },
-              icon: const Icon(
-                Icons.add,
-                color: Colors.white,
-              )),
+            onPressed: () {
+              Navigator.of(context).pushNamed(newNoteRoute);
+            },
+            icon: const Icon(Icons.add, color: Colors.white),
+          ),
           PopupMenuButton<MenuAction>(
             onSelected: (value) async {
               switch (value) {
@@ -49,24 +45,15 @@ class _NotesViewState extends State<NotesView> {
                   final shouldLogout = await showLogoutDialog(context);
                   if (shouldLogout) {
                     await AuthService.firebase().logOut();
-                    Navigator.of(context)
-                        .pushNamedAndRemoveUntil(loginRoute, (route) => false);
+                    Navigator.of(context).pushNamedAndRemoveUntil(loginRoute, (route) => false);
                   }
                   break;
               }
             },
-            itemBuilder: (context) {
-              return const [
-                PopupMenuItem<MenuAction>(
-                  value: MenuAction.logOut,
-                  child: Text("Log Out"),
-                )
-              ];
-            },
-            style: ButtonStyle(
-              iconColor: WidgetStateProperty.all<Color>(Colors.white),
-            ),
-          )
+            itemBuilder: (context) => const [
+              PopupMenuItem(value: MenuAction.logOut, child: Text("Log Out")),
+            ],
+          ),
         ],
       ),
       body: FutureBuilder(
@@ -74,23 +61,24 @@ class _NotesViewState extends State<NotesView> {
         builder: (context, snapshot) {
           switch (snapshot.connectionState) {
             case ConnectionState.done:
-              return StreamBuilder(
+              return StreamBuilder<List<DatabaseNotes>>(
                 stream: _notesService.allNotes,
                 builder: (context, snapshot) {
                   switch (snapshot.connectionState) {
                     case ConnectionState.active:
-                      if (snapshot.hasData) {
-                        final allnotes = snapshot.data as List<DatabaseNotes>;
-                        print('Error fetching notes');
+                      if (snapshot.hasData && snapshot.data!.isNotEmpty) { // Check for non-empty data
+                        final allNotes = snapshot.data!;
+                        print('Displaying notes: $allNotes'); // Debugging line
                         return NotesListView(
-                          notes: allnotes,
+                          notes: allNotes,
                           onDeleteNote: (note) async {
                             await _notesService.deleteNote(id: note.id);
                           },
                         );
-                      }
-                      else {
-                        return const CircularProgressIndicator();
+                      } else if (snapshot.hasData && snapshot.data!.isEmpty) { // Handle empty notes case
+                        return const Center(child: Text('No notes available.'));
+                      } else {
+                        return const Center(child: Text('Error fetching notes.'));
                       }
                     default:
                       return const CircularProgressIndicator();
