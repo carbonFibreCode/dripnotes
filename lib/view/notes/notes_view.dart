@@ -34,7 +34,7 @@ class _NotesViewState extends State<NotesView> {
         actions: [
           IconButton(
             onPressed: () {
-              Navigator.of(context).pushNamed(newNoteRoute);
+              Navigator.of(context).pushNamed(createOrUpdateNoteRoute);
             },
             icon: const Icon(Icons.add, color: Colors.white),
           ),
@@ -45,7 +45,8 @@ class _NotesViewState extends State<NotesView> {
                   final shouldLogout = await showLogoutDialog(context);
                   if (shouldLogout) {
                     await AuthService.firebase().logOut();
-                    Navigator.of(context).pushNamedAndRemoveUntil(loginRoute, (route) => false);
+                    Navigator.of(context)
+                        .pushNamedAndRemoveUntil(loginRoute, (route) => false);
                   }
                   break;
               }
@@ -66,7 +67,8 @@ class _NotesViewState extends State<NotesView> {
                 builder: (context, snapshot) {
                   switch (snapshot.connectionState) {
                     case ConnectionState.active:
-                      if (snapshot.hasData && snapshot.data!.isNotEmpty) { // Check for non-empty data
+                      if (snapshot.hasData && snapshot.data!.isNotEmpty) {
+                        // Check for non-empty data
                         final allNotes = snapshot.data!;
                         print('Displaying notes: $allNotes'); // Debugging line
                         return NotesListView(
@@ -74,11 +76,19 @@ class _NotesViewState extends State<NotesView> {
                           onDeleteNote: (note) async {
                             await _notesService.deleteNote(id: note.id);
                           },
+                          onTap: (note) {
+                            Navigator.of(context).pushNamed(
+                              createOrUpdateNoteRoute,
+                              arguments: note,
+                            );
+                          },
                         );
-                      } else if (snapshot.hasData && snapshot.data!.isEmpty) { // Handle empty notes case
+                      } else if (snapshot.hasData && snapshot.data!.isEmpty) {
+                        // Handle empty notes case
                         return const Center(child: Text('No notes available.'));
                       } else {
-                        return const Center(child: Text('Error fetching notes.'));
+                        return const Center(
+                            child: Text('Error fetching notes.'));
                       }
                     default:
                       return const CircularProgressIndicator();
