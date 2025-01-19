@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:dripnotes/extensions/list/filter.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path_provider/path_provider.dart';
@@ -65,6 +66,8 @@ class NotesService {
   Database? _db;
   List<DatabaseNotes> _notes = [];
 
+  DatabaseUser? _user;
+
   static final NotesService _shared = NotesService._sharedInstance();
 
   late final StreamController<List<DatabaseNotes>> _notesStreamController;
@@ -79,7 +82,15 @@ class NotesService {
 
   factory NotesService() => _shared;
 
-  Stream<List<DatabaseNotes>> get allNotes => _notesStreamController.stream;
+  Stream<List<DatabaseNotes>> get allNotes =>
+      _notesStreamController.stream.filter((note) {
+        final currentUser = _user;
+        if (currentUser != null) {
+          return note.userId == currentUser.id;
+        } else {
+          throw UserShouldBeSetBeforeReadingAllNotes();
+        }
+      });
 
   Future<void> verifyDatabaseState() async {
     final db = _getDatabaseOrThrow();
@@ -93,36 +104,44 @@ class NotesService {
 
     // Check if counts match
     if (dbNotes.length != _notes.length) {
-      print('Mismatch between database (${dbNotes.length}) and cache (${_notes.length})');
-      await refreshNotes();
+      print(
+          'Mismatch between database (${dbNotes.length}) and cache (${_notes.length})');
+      await _cacheNotes();
     }
   }
 
-  Future<void> refreshNotes() async {
+  Future<void> _cacheNotes() async {
     await ensureDbIsOpen();
     final db = _getDatabaseOrThrow();
 
-    final notesData = await db.query(
-        notesTable,
-        orderBy: 'id DESC'
-    );
+    final notesData = await db.query(notesTable, orderBy: 'id DESC');
 
-    _notes = notesData.map((noteRow) => DatabaseNotes.fromRow(noteRow)).toList();
+    _notes =
+        notesData.map((noteRow) => DatabaseNotes.fromRow(noteRow)).toList();
     _notesStreamController.add(_notes);
 
     print('Refreshed notes count: ${_notes.length}');
     print('Refreshed notes content: $_notes');
   }
 
-  Future<DatabaseUser> getOrCreateUser({required String email}) async {
+  Future<DatabaseUser> getOrCreateUser({
+    required String email,
+    bool setAsCurrentUser = true,
+  }) async {
     try {
       final user = await getUser(email: email);
+      if (setAsCurrentUser) {
+        _user = user;
+      }
       await verifyDatabaseState();
       return user;
     } on CouldNotFindUser {
-      final user = await createUser(email: email);
+      final createdUser = await createUser(email: email);
+      if (setAsCurrentUser) {
+        _user = createdUser;
+      }
       await verifyDatabaseState();
-      return user;
+      return createdUser;
     }
   }
 
@@ -135,10 +154,12 @@ class NotesService {
 
     await getNote(id: note.id);
 
-    final updatesCount = await db.update(notesTable, {
-      textColumn: text,
-      isSyncedWithCloudColumn: 0,
-    },
+    final updatesCount = await db.update(
+        notesTable,
+        {
+          textColumn: text,
+          isSyncedWithCloudColumn: 0,
+        },
         where: 'id = ?',
         whereArgs: [note.id]);
 
@@ -146,7 +167,7 @@ class NotesService {
       throw CouldNotUpdateNote();
     }
 
-    await refreshNotes();
+    await _cacheNotes();
     await verifyDatabaseState();
 
     return await getNote(id: note.id);
@@ -156,10 +177,7 @@ class NotesService {
     await ensureDbIsOpen();
     final db = _getDatabaseOrThrow();
 
-    final notesData = await db.query(
-        notesTable,
-        orderBy: 'id DESC'
-    );
+    final notesData = await db.query(notesTable, orderBy: 'id DESC');
 
     print('Raw DB data: $notesData');
 
@@ -187,7 +205,7 @@ class NotesService {
       throw CouldNotFindNote();
     }
 
-    await refreshNotes();
+    await _cacheNotes();
     await verifyDatabaseState();
 
     return DatabaseNotes.fromRow(notesData.first);
@@ -198,7 +216,7 @@ class NotesService {
     final db = _getDatabaseOrThrow();
 
     final numberOfDeletions = await db.delete(notesTable);
-    await refreshNotes();
+    await _cacheNotes();
     await verifyDatabaseState();
 
     return numberOfDeletions;
@@ -218,7 +236,7 @@ class NotesService {
       throw CouldNotDeleteNote();
     }
 
-    await refreshNotes();
+    await _cacheNotes();
     await verifyDatabaseState();
   }
 
@@ -246,7 +264,7 @@ class NotesService {
       isSyncedWithCloud: true,
     );
 
-    await refreshNotes();
+    await _cacheNotes();
     await verifyDatabaseState();
 
     return note;
@@ -285,10 +303,8 @@ class NotesService {
       throw UserAlreadyExist();
     }
 
-    final userId = await db.insert(
-        userTable,
-        {emailColumn: email.toLowerCase()}
-    );
+    final userId =
+        await db.insert(userTable, {emailColumn: email.toLowerCase()});
 
     return DatabaseUser(
       id: userId,
@@ -352,7 +368,7 @@ class NotesService {
       await db.execute(CreateUserTable);
       await db.execute(CreateTheNotesTable);
 
-      await refreshNotes();
+      await _cacheNotes();
       await verifyDatabaseState();
     } on MissingPlatformDirectoryException {
       throw UnableToGetDocumentsDirectory();
