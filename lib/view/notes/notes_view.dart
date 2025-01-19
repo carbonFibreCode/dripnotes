@@ -1,8 +1,10 @@
 import 'package:dripnotes/constants/routes.dart';
 import 'package:dripnotes/services/auth/auth_service.dart';
 import 'package:dripnotes/services/crud/notes_service.dart';
+import 'package:dripnotes/view/notes_list_view.dart';
 import 'package:flutter/material.dart';
 import '../../enums/menu_action.dart';
+import '../../utilities/dialog/logout_dialog.dart';
 
 class NotesView extends StatefulWidget {
   const NotesView({super.key});
@@ -68,7 +70,7 @@ class _NotesViewState extends State<NotesView> {
         ],
       ),
       body: FutureBuilder(
-        future: _notesService.getOrCreateUSer(email: userEmail),
+        future: _notesService.getOrCreateUser(email: userEmail),
         builder: (context, snapshot) {
           switch (snapshot.connectionState) {
             case ConnectionState.done:
@@ -76,27 +78,18 @@ class _NotesViewState extends State<NotesView> {
                 stream: _notesService.allNotes,
                 builder: (context, snapshot) {
                   switch (snapshot.connectionState) {
-                    case ConnectionState.waiting:
                     case ConnectionState.active:
                       if (snapshot.hasData) {
-                        final allNotes = snapshot.data as List<DatabaseNotes>;
-                        print('Data: $allNotes');
-                        return ListView.builder(
-                          itemCount: allNotes.length,
-                          itemBuilder: (context, index) {
-                            final note = allNotes[index];
-                            return ListTile(
-                              title: Text(
-                                note.text,
-                                maxLines: 1,
-                                softWrap: true,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            );
+                        final allnotes = snapshot.data as List<DatabaseNotes>;
+                        print('Error fetching notes');
+                        return NotesListView(
+                          notes: allnotes,
+                          onDeleteNote: (note) async {
+                            await _notesService.deleteNote(id: note.id);
                           },
                         );
-                      } else {
-                        print('No data available');
+                      }
+                      else {
                         return const CircularProgressIndicator();
                       }
                     default:
@@ -111,27 +104,4 @@ class _NotesViewState extends State<NotesView> {
       ),
     );
   }
-}
-
-Future<bool> showLogoutDialog(BuildContext context) {
-  return showDialog<bool>(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text("Log out"),
-          content: const Text("Are you sure want to Log Out"),
-          actions: [
-            TextButton(
-                onPressed: () {
-                  Navigator.of(context).pop(false);
-                },
-                child: const Text("cancel")),
-            TextButton(
-                onPressed: () {
-                  Navigator.of(context).pop(true);
-                },
-                child: const Text("Log Out"))
-          ],
-        );
-      }).then((value) => value ?? false);
 }
