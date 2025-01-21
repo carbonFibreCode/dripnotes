@@ -1,6 +1,6 @@
 import 'package:dripnotes/constants/routes.dart';
 import 'package:dripnotes/services/auth/auth_service.dart';
-import 'package:dripnotes/services/crud/notes_service.dart';
+import 'package:dripnotes/services/cloud/firebase_cloud_storage.dart';
 import 'package:dripnotes/view/notes_list_view.dart';
 import 'package:flutter/material.dart';
 import '../../enums/menu_action.dart';
@@ -14,15 +14,14 @@ class NotesView extends StatefulWidget {
 }
 
 class _NotesViewState extends State<NotesView> {
-  late final NotesService _notesService;
+  late final FirebaseCloudStorage _notesService;
 
-  String get userEmail => AuthService.firebase().currentUser!.email;
+  String get userId => AuthService.firebase().currentUser!.id;
 
   @override
   void initState() {
-    super.initState();
-    _notesService = NotesService();
-    _notesService.open(); // Ensure database is opened
+    _notesService = FirebaseCloudStorage();
+    super.initState(); // Ensure database is opened
   }
 
   @override
@@ -57,13 +56,8 @@ class _NotesViewState extends State<NotesView> {
           ),
         ],
       ),
-      body: FutureBuilder(
-        future: _notesService.getOrCreateUser(email: userEmail),
-        builder: (context, snapshot) {
-          switch (snapshot.connectionState) {
-            case ConnectionState.done:
-              return StreamBuilder<List<DatabaseNotes>>(
-                stream: _notesService.allNotes,
+      body: StreamBuilder(
+                stream: _notesService.allNotes(ownerUserId: userId),
                 builder: (context, snapshot) {
                   switch (snapshot.connectionState) {
                     case ConnectionState.active:
@@ -74,7 +68,7 @@ class _NotesViewState extends State<NotesView> {
                         return NotesListView(
                           notes: allNotes,
                           onDeleteNote: (note) async {
-                            await _notesService.deleteNote(id: note.id);
+                            await _notesService.deleteNote(documentId: note.documentId);
                           },
                           onTap: (note) {
                             Navigator.of(context).pushNamed(
@@ -94,12 +88,7 @@ class _NotesViewState extends State<NotesView> {
                       return const CircularProgressIndicator();
                   }
                 },
-              );
-            default:
-              return const CircularProgressIndicator();
-          }
-        },
-      ),
+              )
     );
   }
 }
