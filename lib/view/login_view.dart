@@ -1,5 +1,6 @@
 import 'package:dripnotes/services/auth/bloc/auth_bloc.dart';
 import 'package:dripnotes/services/auth/bloc/auth_event.dart';
+import 'package:dripnotes/services/auth/bloc/auth_state.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../utilities/dialog/show_error_dialog.dart';
@@ -32,75 +33,87 @@ class _LoginViewState extends State<LoginView> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text(
-          "Login",
-          style: TextStyle(color: Colors.white),
+    return BlocListener<AuthBloc, AuthState>(
+      listener: (context, state) async {
+        if (state is AuthStateLoggedOut) {
+          if (state.exception != null) {
+            if (state.exception is UserNotLoggedInAuthException) {
+              await showErrorDialog(context, 'User not Logged In');
+            } else if (state.exception is InvalidCredentialsAuthException) {
+              await showErrorDialog(context, 'Invalid credentials');
+            } else if (state.exception is ChannelErrorAuthException) {
+              await showErrorDialog(context, 'Channel error');
+            } else if (state.exception is InvalidEmailAuthException) {
+              await showErrorDialog(context, 'Invalid email');
+            } else if (state.exception is GenericAuthException) {
+              await showErrorDialog(context, 'Authentication Error');
+            }
+          }
+        }
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text(
+            "Login",
+            style: TextStyle(color: Colors.white),
+          ),
+          backgroundColor: Colors.blue,
         ),
-        backgroundColor: Colors.blue,
-      ),
-      body: Column(
-        children: [
-          TextField(
-            controller: _email,
-            autocorrect: false,
-            enableSuggestions: false,
-            keyboardType: TextInputType.emailAddress,
-            decoration: const InputDecoration(
-              hintText: "Enter Email or Username",
-            ),
-          ),
-          TextField(
-            controller: _password,
-            obscureText: true,
-            autocorrect: false,
-            enableSuggestions: false,
-            decoration: const InputDecoration(
-              hintText: "Enter Password",
-            ),
-          ),
-          TextButton(
-            onPressed: () async {
-              final email = _email.text;
-              final password = _password.text;
-              try {
-                context.read<AuthBloc>().add(
-                      AuthEventLogin(
-                        email: email,
-                        password: password,
-                      ),
-                    );
-              } on InvalidCredentialsAuthException {
-                await showErrorDialog(
-                    context, "User email or password is invalid");
-              } on InvalidEmailAuthException {
-                await showErrorDialog(context, "Enter the valid E-mail");
-              } on ChannelErrorAuthException {
-                await showErrorDialog(context, "Enter the valid credentials");
-              } on GenericAuthException {
-                await showErrorDialog(context, 'Authentication Error');
-              }
-            },
-            child: const Text(
-              "Login",
-              style: TextStyle(
-                color: Colors.blue,
-              ),
-            ),
-          ),
-          TextButton(
-              onPressed: () {
-                Navigator.of(context)
-                    .pushNamedAndRemoveUntil('/register/', (route) => false);
-              },
-              child: const Text(
-                "Not yet registered? Register Now!",
-                style: TextStyle(
-                  color: Colors.blue,
+        body: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              TextField(
+                controller: _email,
+                autocorrect: false,
+                enableSuggestions: false,
+                keyboardType: TextInputType.emailAddress,
+                decoration: const InputDecoration(
+                  hintText: "Enter Email or Username",
+                  border: OutlineInputBorder(),
                 ),
-              ))
-        ],
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: _password,
+                obscureText: true,
+                autocorrect: false,
+                enableSuggestions: false,
+                decoration: const InputDecoration(
+                  hintText: "Enter Password",
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: () async {
+                  final email = _email.text;
+                  final password = _password.text;
+                  context.read<AuthBloc>().add(
+                    AuthEventLogin(
+                      email: email,
+                      password: password,
+                    ),
+                  );
+                },
+                child: const Text("Login"),
+              ),
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context)
+                      .pushNamedAndRemoveUntil('/register/', (route) => false);
+                },
+                child: const Text(
+                  "Not yet registered? Register Now!",
+                  style: TextStyle(
+                    color: Colors.blue,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
