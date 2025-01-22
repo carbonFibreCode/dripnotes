@@ -1,6 +1,7 @@
-import 'package:dripnotes/constants/routes.dart';
-import 'package:dripnotes/services/auth/auth_service.dart';
+import 'package:dripnotes/services/auth/bloc/auth_bloc.dart';
+import 'package:dripnotes/services/auth/bloc/auth_event.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import '../utilities/dialog/show_error_dialog.dart';
 import 'package:dripnotes/services/auth/auth_exceptions.dart';
 
@@ -64,32 +65,22 @@ class _LoginViewState extends State<LoginView> {
               final email = _email.text;
               final password = _password.text;
               try {
-                await AuthService.firebase().logIn(email: email, password: password);
-                final user = AuthService.firebase().currentUser;
-                if(user != null){
-                  if(user.isEmailVerified){
-                    Navigator.of(context).pushNamedAndRemoveUntil(notesRoute, (route) => false);
-                  }
-                  else{
-                    Navigator.of(context).pushNamed(verifyEmailRoute);
-                  }
-                }
-                else{
-                  Navigator.of(context).pushNamedAndRemoveUntil(loginRoute, (route) => false);
-                }
+                context.read<AuthBloc>().add(
+                      AuthEventLogin(
+                        email: email,
+                        password: password,
+                      ),
+                    );
               } on InvalidCredentialsAuthException {
-                await showErrorDialog(context, "User email or password is invalid");
-              }
-              on InvalidEmailAuthException {
+                await showErrorDialog(
+                    context, "User email or password is invalid");
+              } on InvalidEmailAuthException {
                 await showErrorDialog(context, "Enter the valid E-mail");
-              }
-              on ChannelErrorAuthException {
+              } on ChannelErrorAuthException {
                 await showErrorDialog(context, "Enter the valid credentials");
-              }
-              on GenericAuthException {
+              } on GenericAuthException {
                 await showErrorDialog(context, 'Authentication Error');
               }
-
             },
             child: const Text(
               "Login",
@@ -114,4 +105,3 @@ class _LoginViewState extends State<LoginView> {
     );
   }
 }
-
