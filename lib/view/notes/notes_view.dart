@@ -28,7 +28,7 @@ class _NotesViewState extends State<NotesView> {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context){
     return Scaffold(
         appBar: AppBar(
           title:
