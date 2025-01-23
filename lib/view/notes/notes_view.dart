@@ -28,7 +28,7 @@ class _NotesViewState extends State<NotesView> {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context){
     return Scaffold(
         appBar: AppBar(
           title:
@@ -50,8 +50,6 @@ class _NotesViewState extends State<NotesView> {
                       context.read<AuthBloc>().add(
                             const AuthEventLogout(),
                           );
-                      Navigator.of(context).pushNamedAndRemoveUntil(
-                          loginRoute, (route) => false);
                     }
                     break;
                 }
