@@ -1,4 +1,3 @@
-import 'package:dripnotes/constants/routes.dart';
 import 'package:dripnotes/services/auth/auth_exceptions.dart';
 import 'package:dripnotes/services/auth/bloc/auth_event.dart';
 import 'package:flutter/material.dart';

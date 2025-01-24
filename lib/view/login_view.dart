@@ -1,7 +1,6 @@
 import 'package:dripnotes/services/auth/bloc/auth_bloc.dart';
 import 'package:dripnotes/services/auth/bloc/auth_event.dart';
 import 'package:dripnotes/services/auth/bloc/auth_state.dart';
-import 'package:dripnotes/utilities/dialog/loading_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../utilities/dialog/show_error_dialog.dart';
