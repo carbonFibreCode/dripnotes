@@ -21,24 +21,26 @@ class _verifyEmailViewState extends State<verifyEmailView> {
         ),
         backgroundColor: Colors.blue,
       ),
-      body: Column(
-        children: [
-          const Text(
-              "We've sent a mail to verify your E-mail Address please open it to verify"),
-          const Text("If yet not recieved E-mail... click on the button below"),
-          TextButton(
-            onPressed: () {
-              context.read<AuthBloc>().add(const AuthEventSendEmailVerification());
-            },
-            child: const Text("Send Verification Mail"),
-          ),
-          TextButton(
-            onPressed: () async {
-              context.read<AuthBloc>().add(const AuthEventLogout());
-            },
-            child: const Text("Restart"),
-          )
-        ],
+      body: SingleChildScrollView(
+        child: Column(
+          children: [
+            const Text(
+                "We've sent a mail to verify your E-mail Address please open it to verify"),
+            const Text("If yet not recieved E-mail... click on the button below"),
+            TextButton(
+              onPressed: () {
+                context.read<AuthBloc>().add(const AuthEventSendEmailVerification());
+              },
+              child: const Text("Send Verification Mail"),
+            ),
+            TextButton(
+              onPressed: () async {
+                context.read<AuthBloc>().add(const AuthEventLogout());
+              },
+              child: const Text("Restart"),
+            )
+          ],
+        ),
       ),
     );
   }
